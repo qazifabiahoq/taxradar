@@ -1,15 +1,16 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TaxRadar API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: analysis
+    description: Tax document analysis
 paths:
   /healthz:
     get:
@@ -24,6 +25,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /analyze:
+    post:
+      operationId: analyzeDocuments
+      tags: [analysis]
+      summary: Analyze tax documents
+      description: Upload and analyze tax documents, returning a CPA-ready report
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+                - files
+      responses:
+        "200":
+          description: Analysis report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisReport"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +73,132 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+    IncomeSource:
+      type: object
+      properties:
+        source:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [consistent, flagged]
+        notes:
+          type: string
+      required:
+        - source
+        - amount
+        - status
+    RiskItem:
+      type: object
+      properties:
+        category:
+          type: string
+        description:
+          type: string
+        risk_level:
+          type: string
+          enum: [high, medium, low]
+        recommendation:
+          type: string
+      required:
+        - category
+        - description
+        - risk_level
+    Deduction:
+      type: object
+      properties:
+        category:
+          type: string
+        amount:
+          type: number
+        risk_level:
+          type: string
+          enum: [high, medium, low]
+        notes:
+          type: string
+      required:
+        - category
+        - amount
+        - risk_level
+    MissingDocument:
+      type: object
+      properties:
+        document:
+          type: string
+        reason:
+          type: string
+        impact:
+          type: string
+          enum: [critical, important, minor]
+      required:
+        - document
+        - reason
+        - impact
+    RiskDistribution:
+      type: object
+      properties:
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+      required:
+        - high
+        - medium
+        - low
+    AnalysisReport:
+      type: object
+      properties:
+        executive_summary:
+          type: string
+        audit_risk_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        risk_distribution:
+          $ref: "#/components/schemas/RiskDistribution"
+        income_sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomeSource"
+        top_risks:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskItem"
+        deductions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Deduction"
+        missing_documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingDocument"
+        cpa_memo:
+          type: string
+        client_name:
+          type: string
+        tax_year:
+          type: string
+        analysis_date:
+          type: string
+      required:
+        - executive_summary
+        - audit_risk_score
+        - risk_distribution
+        - income_sources
+        - top_risks
+        - deductions
+        - missing_documents
+        - cpa_memo

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "TaxRadar"
+version = "1.0.0"
+id = "artifacts/taxradar"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 23834
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/taxradar run dev"
+
+[services.env]
+PORT = "23834"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/taxradar", "run", "build"]
+publicDir = "artifacts/taxradar/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

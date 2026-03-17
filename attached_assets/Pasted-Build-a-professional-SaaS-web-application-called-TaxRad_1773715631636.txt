@@ -1,0 +1,207 @@
+Build a professional SaaS web application called TaxRadar — an AI-powered tax document intelligence platform for CPA firms and tax professionals.
+
+Tagline: Audit-ready in minutes. Built for tax professionals.
+
+Business model: CPA firms and tax professionals upload messy client tax documents. TaxRadar's AI agents scan everything, cross-check income, flag risky deductions, detect missing forms, and produce a CPA-ready tax readiness memo. It does not replace CPAs. It eliminates the 3 to 8 hour manual intake process so they can focus on actual tax strategy.
+
+Backend will be deployed on Render. Frontend calls backend via environment variable VITE_API_URL. All API calls use import.meta.env.VITE_API_URL.
+
+PROJECT STRUCTURE (create exactly this)
+
+taxradar/
+├── .gitignore
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Landing.tsx
+│   │   │   ├── Upload.tsx
+│   │   │   ├── Report.tsx
+│   │   │   └── Pricing.tsx
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx
+│   │   │   └── Footer.tsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── .env
+│   ├── .env.example
+│   ├── package.json
+│   └── vite.config.ts
+│
+└── backend/
+    ├── main.py
+    ├── agents.py
+    ├── requirements.txt
+    ├── Procfile
+    ├── .env
+    └── .env.example
+
+PAGES
+
+1. LANDING PAGE
+Navbar: TaxRadar logo left, links center (Features, How It Works, Pricing), Start Free Trial button right
+Hero: headline "Tax Document Intelligence in Minutes", subheading "TaxRadar scans your client's documents, flags audit risks, and generates a CPA-ready memo automatically", two CTAs: Start Free Trial and See How It Works
+Stats bar: 10x Faster Document Review, 12 Risk Categories Checked, CPA-Ready Memos in 2 Minutes
+Features: 4 cards: Document Classification, Income Cross-Check, Deduction Risk Scoring, Missing Document Detection
+How It Works: 3 steps: Upload Documents, AI Agents Analyze, Get CPA Memo
+Pricing: 3 tiers
+  Starter $79/month: 30 clients/month, 1 user, PDF export
+  Professional $199/month: 150 clients/month, 5 users, PDF export, priority support
+  Enterprise $599/month: Unlimited clients, unlimited users, API access, dedicated support
+Footer: TaxRadar logo, tagline, links
+
+2. UPLOAD PAGE
+Clean centered layout
+Drag and drop area that accepts PDF, JPG, PNG
+Note below upload area: "You can upload multiple files at once"
+Analyze Documents button in gold
+Loading state with animated progress steps:
+  Step 1: Extracting document text
+  Step 2: Classifying document types
+  Step 3: Cross-checking income sources
+  Step 4: Scoring deduction risks
+  Step 5: Detecting missing documents
+  Step 6: Generating CPA memo
+
+3. REPORT PAGE
+Sticky top bar: Tax Readiness Report title, date, overall risk badge (red for high, orange for medium, green for low), audit risk score out of 100, Download Report button, Copy Memo button
+Audit Risk Score card: large score number, pie chart showing High/Medium/Low distribution using Recharts
+Executive Summary card: 3 to 4 sentence paragraph
+Income Analysis card: table showing income sources, amounts, and consistency status (consistent or flagged)
+Top 3 Highest Risk Items: 3 cards with risk badge and one line explanation each
+Full Deduction Analysis: expandable accordion, each row color coded by risk, red/orange/green left border
+Missing Documents: cards listing what is absent and why it matters
+CPA Memo: full editable textarea, professional styling, Copy Memo button and Download as PDF button
+
+4. PRICING PAGE
+Same pricing section as landing page with FAQ section below
+
+DESIGN SYSTEM
+
+Primary background: #0A1628 dark navy
+Card background: #112240 lighter navy
+Text primary: #FFFFFF
+Text muted: #8892B0
+Accent: #C9A84C gold for buttons and highlights
+Risk high: #EF4444 red
+Risk medium: #F59E0B amber
+Risk low: #10B981 green
+Font: Inter
+Framer Motion scroll animations on landing page
+Hover effects on all cards and buttons
+No emojis anywhere in the application
+No em dashes anywhere in the application
+Professional tone throughout, no casual language in UI copy
+Feel: enterprise B2B SaaS, similar to KPMG or Deloitte internal tools
+
+FRONTEND ENV
+
+Create frontend/.env with this exact content:
+VITE_API_URL=http://localhost:8000
+
+Create frontend/.env.example with this exact content:
+VITE_API_URL=https://your-render-deployment.onrender.com
+
+All API calls must use import.meta.env.VITE_API_URL
+
+Upload page sends files to:
+POST ${import.meta.env.VITE_API_URL}/api/analyze
+Files sent as FormData, field name: files (array, not single file)
+
+BACKEND: main.py
+
+FastAPI app with:
+
+POST /api/analyze
+Accepts multipart/form-data with field "files" (multiple files)
+Extracts text from each file using pdfplumber for PDFs
+Passes extracted text to run_analysis function in agents.py
+Returns JSON report
+
+GET /health
+Returns {"status": "ok"}
+
+CORS: allow all origins
+
+BACKEND: agents.py
+
+Leave this file as a placeholder only. Add this exact comment at the top:
+
+# TaxRadar AI Agent Pipeline
+# Google Gemini API (google-generativeai)
+# Agents will be added here separately - do not generate agent code
+
+Then add this exact placeholder function and nothing else:
+
+def run_analysis(extracted_text: str) -> dict:
+    # Placeholder - real agents pasted here later
+    return {
+        "executive_summary": "Analysis pending agent integration.",
+        "audit_risk_score": 0,
+        "risk_distribution": {"high": 0, "medium": 0, "low": 0},
+        "income_sources": [],
+        "top_risks": [],
+        "deductions": [],
+        "missing_documents": [],
+        "cpa_memo": "Memo pending agent integration."
+    }
+
+BACKEND: requirements.txt
+
+fastapi
+uvicorn
+python-multipart
+pdfplumber
+pillow
+python-dotenv
+google-generativeai
+
+BACKEND: Procfile
+
+web: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+
+BACKEND: .env files
+
+Create backend/.env with this exact content:
+GOOGLE_API_KEY=placeholder_add_real_key_later
+
+Create backend/.env.example with this exact content:
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+GITIGNORE
+
+Create .gitignore at the project root with this exact content:
+
+.env
+backend/.env
+frontend/.env
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.DS_Store
+.venv/
+*.egg-info/
+
+FRONTEND TECH STACK
+
+React with Vite and TypeScript
+Tailwind CSS
+Recharts for pie chart on report page
+Axios for all API calls
+Framer Motion for scroll animations
+React Router DOM for routing
+
+IMPORTANT RULES
+
+1. Do not generate any agent code in agents.py - it is a placeholder only
+2. Do not modify agents.py after creating it
+3. All API calls from frontend must use VITE_API_URL environment variable, never hardcode any URLs
+4. Build the frontend completely with all 4 pages fully styled and functional
+5. The report page must display realistic mock placeholder data - do not leave any section blank
+6. After building, confirm the exact folder structure that was created
+7. Do not push to GitHub
+8. The .gitignore must be at the project root and must include all .env files
+9. Both frontend/.env and backend/.env must be created with placeholder values so the app runs immediately in Replit without any manual setup
+10. No emojis anywhere in the codebase including UI copy, comments, or variable names
+11. No em dashes anywhere in UI copy or comments, use plain alternatives instead
+12. All UI copy must be professional and suitable for enterprise clients
