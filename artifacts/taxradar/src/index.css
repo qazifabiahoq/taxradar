@@ -66,7 +66,7 @@
   --popover-foreground: 0 0% 100%;
   --popover-border: 221 42% 20%;
   
-  --primary: 44 54% 54%; /* #C9A84C - Gold */
+  --primary: 160 84% 39%; /* #10B981 - Green */
   --primary-foreground: 216 60% 10%; /* Dark Navy */
   
   --secondary: 221 42% 20%; /* #1E2D4A */
@@ -75,7 +75,7 @@
   --muted: 221 42% 20%; 
   --muted-foreground: 225 20% 61%; /* #8892B0 */
   
-  --accent: 44 54% 54%;
+  --accent: 160 84% 39%;
   --accent-foreground: 216 60% 10%;
   
   --destructive: 0 84% 60%; /* #EF4444 - Red */
@@ -86,7 +86,7 @@
   
   --border: 221 42% 20%;
   --input: 221 42% 20%;
-  --ring: 44 54% 54%;
+  --ring: 160 84% 39%;
 
   --radius: 0.75rem;
 
@@ -106,13 +106,13 @@
   --popover: 218 58% 16%;
   --popover-foreground: 0 0% 100%;
   --popover-border: 221 42% 20%;
-  --primary: 44 54% 54%;
+  --primary: 160 84% 39%;
   --primary-foreground: 216 60% 10%;
   --secondary: 221 42% 20%;
   --secondary-foreground: 0 0% 100%;
   --muted: 221 42% 20%;
   --muted-foreground: 225 20% 61%;
-  --accent: 44 54% 54%;
+  --accent: 160 84% 39%;
   --accent-foreground: 216 60% 10%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
@@ -120,7 +120,7 @@
   --success: 160 84% 39%;
   --border: 221 42% 20%;
   --input: 221 42% 20%;
-  --ring: 44 54% 54%;
+  --ring: 160 84% 39%;
 }
 
 @layer base {
@@ -154,6 +154,6 @@
     @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-2xl;
   }
   .text-gradient-gold {
-    @apply bg-gradient-to-r from-[#C9A84C] to-[#E5C877] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#10B981] to-[#34D399] bg-clip-text text-transparent;
   }
 }
