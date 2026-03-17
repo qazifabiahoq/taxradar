@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash-preview-04-17")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 def call_agent(system_prompt: str, user_content: str) -> dict:
