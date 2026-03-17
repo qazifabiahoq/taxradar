@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = 'gemini-2.0-flash'
+MODEL = 'gemini-2.5-flash'
 
 document_classifier = LlmAgent(
     name='document_classifier',
