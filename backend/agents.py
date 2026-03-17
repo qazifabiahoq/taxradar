@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Force Google AI Studio (not Vertex AI)
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'false'
+
 MODEL = 'gemini-2.5-flash'
 
 document_classifier = LlmAgent(
