@@ -82,7 +82,7 @@
   --destructive-foreground: 0 0% 100%;
 
   --warning: 38 92% 50%; /* #F59E0B - Amber */
-  --success: 160 84% 39%; /* #10B981 - Green */
+  --success: 158 64% 52%; /* #34D399 - Light Green */
   
   --border: 221 42% 20%;
   --input: 221 42% 20%;
@@ -117,7 +117,7 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --warning: 38 92% 50%;
-  --success: 160 84% 39%;
+  --success: 158 64% 52%; /* #34D399 - Light Green */
   --border: 221 42% 20%;
   --input: 221 42% 20%;
   --ring: 160 84% 39%;
