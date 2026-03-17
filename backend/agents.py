@@ -80,10 +80,10 @@ root_agent = LlmAgent(
 )
 
 
-def run_analysis(extracted_text: str) -> dict:
+async def run_analysis(extracted_text: str) -> dict:
     try:
         session_service = InMemorySessionService()
-        session_service.create_session(
+        await session_service.create_session(
             app_name='taxradar',
             user_id='cpa_user',
             session_id='analysis_session',
@@ -98,13 +98,14 @@ def run_analysis(extracted_text: str) -> dict:
             parts=[types.Part(text=extracted_text)],
         )
         final_response = None
-        for event in runner.run(
+        async for event in runner.run_async(
             user_id='cpa_user',
             session_id='analysis_session',
             new_message=message,
         ):
             if event.is_final_response():
-                final_response = event.content.parts[0].text
+                if event.content and event.content.parts:
+                    final_response = event.content.parts[0].text
                 break
         if not final_response:
             raise Exception('No response from agent pipeline')
