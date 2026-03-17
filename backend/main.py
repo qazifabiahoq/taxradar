@@ -36,5 +36,5 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
         else:
             extracted_texts.append(f"[FILE: {upload.filename}] (non-PDF file uploaded, manual review required)")
     combined_text = "\n\n---\n\n".join(extracted_texts)
-    report = run_analysis(combined_text)
+    report = await run_analysis(combined_text)
     return report
