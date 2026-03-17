@@ -1,16 +1,9 @@
-import os
 import json
 import asyncio
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# Force Google AI Studio (not Vertex AI)
-os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'false'
 
 MODEL = 'gemini-2.5-flash'
 

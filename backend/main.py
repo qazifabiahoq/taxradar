@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
-import pdfplumber
+import pypdf
 import io
 from agents import run_analysis
 
@@ -28,8 +28,8 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
         content = await upload.read()
         if upload.content_type == "application/pdf" or upload.filename.lower().endswith(".pdf"):
             try:
-                with pdfplumber.open(io.BytesIO(content)) as pdf:
-                    text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+                reader = pypdf.PdfReader(io.BytesIO(content))
+                text = "\n".join(page.extract_text() or "" for page in reader.pages)
                 extracted_texts.append(f"[FILE: {upload.filename}]\n{text}")
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (PDF extraction failed: {str(e)})")
