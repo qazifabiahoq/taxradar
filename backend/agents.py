@@ -10,7 +10,7 @@ load_dotenv()
 
 document_classifier = LlmAgent(
   name='document_classifier',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Classifies tax documents and identifies document types present in the submission.'
   ),
@@ -20,7 +20,7 @@ document_classifier = LlmAgent(
 )
 data_extractor = LlmAgent(
   name='data_extractor',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Extracts specific financial fields and dollar amounts from each identified tax document.'
   ),
@@ -30,7 +30,7 @@ data_extractor = LlmAgent(
 )
 income_validator = LlmAgent(
   name='income_validator',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Cross-validates income across all tax documents and flags discrepancies that could trigger an IRS audit.'
   ),
@@ -40,7 +40,7 @@ income_validator = LlmAgent(
 )
 deduction_scorer = LlmAgent(
   name='deduction_scorer',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Evaluates all deductions against IRS audit trigger thresholds and assigns risk scores.'
   ),
@@ -50,7 +50,7 @@ deduction_scorer = LlmAgent(
 )
 missing_document_detector = LlmAgent(
   name='missing_document_detector',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Identifies required tax forms that are missing from the client submission based on what was found.'
   ),
@@ -60,7 +60,7 @@ missing_document_detector = LlmAgent(
 )
 report_synthesizer = LlmAgent(
   name='report_synthesizer',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Synthesizes all agent outputs into a final CPA-ready tax readiness report with audit risk score and professional memo.'
   ),
@@ -70,7 +70,7 @@ report_synthesizer = LlmAgent(
 )
 root_agent = LlmAgent(
   name='TaxRadar_Orchestrator',
-  model='gemini-2.5-flash',
+  model='gemini-2.0-flash',
   description=(
       'Coordinates all TaxRadar sub-agents to analyze tax documents and deliver a structured audit risk report with CPA memo.'
   ),
