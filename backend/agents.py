@@ -1,9 +1,15 @@
+import os
 import json
+import re
+import uuid
 import asyncio
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
-from google.genai import types
+from google.genai.types import Content, Part
+
+# Map GEMINI_API_KEY → GOOGLE_API_KEY (what google-adk actually reads)
+os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY", "")
 
 MODEL = 'gemini-2.5-flash'
 
@@ -52,22 +58,15 @@ report_synthesizer = LlmAgent(
 
 async def run_agent(agent: LlmAgent, text: str) -> str:
     session_service = InMemorySessionService()
-    session_id = f'session_{agent.name}'
+    session_id = str(uuid.uuid4())
     await session_service.create_session(
         app_name='taxradar',
         user_id='cpa_user',
         session_id=session_id,
     )
-    runner = Runner(
-        agent=agent,
-        app_name='taxradar',
-        session_service=session_service,
-    )
-    message = types.Content(
-        role='user',
-        parts=[types.Part(text=text)],
-    )
-    response_text = None
+    runner = Runner(agent=agent, app_name='taxradar', session_service=session_service)
+    message = Content(parts=[Part(text=text)])
+    result = ''
     async for event in runner.run_async(
         user_id='cpa_user',
         session_id=session_id,
@@ -75,18 +74,34 @@ async def run_agent(agent: LlmAgent, text: str) -> str:
     ):
         if event.is_final_response():
             if event.content and event.content.parts:
-                response_text = event.content.parts[0].text
+                result = ''.join(
+                    p.text for p in event.content.parts
+                    if hasattr(p, 'text') and p.text
+                )
             break
-    return response_text or ''
+    return result
 
 
-def parse_json(text: str) -> dict:
-    text = text.strip()
-    if text.startswith('```'):
-        text = text.split('```')[1]
-        if text.startswith('json'):
-            text = text[4:]
-    return json.loads(text.strip())
+def extract_json(text: str):
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    match = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', text)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except (json.JSONDecodeError, TypeError):
+            pass
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return None
 
 
 async def run_analysis(extracted_text: str) -> dict:
@@ -98,7 +113,7 @@ async def run_analysis(extracted_text: str) -> dict:
         extractor_input = f"DOCUMENT CLASSIFICATION:\n{classifier_raw}\n\nRAW DOCUMENTS:\n{extracted_text}"
         extractor_raw = await run_agent(data_extractor, extractor_input)
 
-        # Steps 3+4+5 — run in parallel (asyncio.gather)
+        # Steps 3+4+5 — run in parallel
         parallel_input = (
             f"DOCUMENT CLASSIFICATION:\n{classifier_raw}\n\n"
             f"EXTRACTED FINANCIALS:\n{extractor_raw}\n\n"
@@ -123,7 +138,10 @@ async def run_analysis(extracted_text: str) -> dict:
         if not final_raw:
             raise Exception('No response from agent pipeline')
 
-        return parse_json(final_raw)
+        result = extract_json(final_raw)
+        if result is None:
+            raise Exception(f'Failed to parse report JSON. Raw: {final_raw[:500]}')
+        return result
 
     except Exception as e:
         print(f'Pipeline error: {str(e)}')
