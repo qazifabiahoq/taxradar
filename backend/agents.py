@@ -8,8 +8,9 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
 
-# Map GEMINI_API_KEY → GOOGLE_API_KEY (what google-adk actually reads)
-os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY", "")
+# Support both GOOGLE_API_KEY (set directly) and GEMINI_API_KEY (alias)
+if not os.environ.get("GOOGLE_API_KEY"):
+    os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY", "")
 
 MODEL = 'gemini-2.5-flash'
 
