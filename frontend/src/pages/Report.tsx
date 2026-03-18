@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import * as XLSX from "xlsx";
 import Navbar from "@/components/Navbar";
 
 interface IncomeSource { source: string; amount: number; status: "consistent" | "flagged"; notes: string; }
@@ -54,6 +55,8 @@ export default function Report() {
   const [data, setData] = useState<Report | null>(null);
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const [memo, setMemo] = useState("");
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("reportData");
@@ -61,6 +64,86 @@ export default function Report() {
     setData(report);
     setMemo(report.cpa_memo);
   }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (downloadRef.current && !downloadRef.current.contains(e.target as Node)) setShowDownloadMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const downloadExcel = () => {
+    if (!data) return;
+    const wb = XLSX.utils.book_new();
+
+    // Summary sheet
+    const summaryRows = [
+      ["Tax Readiness Report"],
+      ["Client", data.client_name || ""],
+      ["Tax Year", data.tax_year || ""],
+      ["Analysis Date", data.analysis_date || ""],
+      ["Audit Risk Score", data.audit_risk_score],
+      ["Risk Level", data.audit_risk_score >= 70 ? "HIGH" : data.audit_risk_score >= 40 ? "MEDIUM" : "LOW"],
+      [],
+      ["Risk Distribution"],
+      ["High Risk Items", data.risk_distribution.high],
+      ["Medium Risk Items", data.risk_distribution.medium],
+      ["Low Risk Items", data.risk_distribution.low],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), "Summary");
+
+    // Income Sources sheet
+    const incomeData = [
+      ["Source Document", "Amount ($)", "Status", "Notes"],
+      ...data.income_sources.map((s: any) => [
+        s.source || s.type || "",
+        Number(s.amount ?? 0),
+        s.status === "consistent" ? "Consistent" : "Flagged",
+        s.notes || "",
+      ]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(incomeData), "Income Sources");
+
+    // Deductions sheet
+    const deductionData = [
+      ["Category", "Amount ($)", "Risk Level", "Notes / Flag Reason", "Recommendation"],
+      ...data.deductions.map((d: any) => [
+        d.category || d.deduction_type || "",
+        Number(d.amount ?? d.amount_claimed ?? 0),
+        (d.risk_level || "").toUpperCase(),
+        d.notes || d.flag_reason || "",
+        d.recommendation || "",
+      ]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(deductionData), "Deductions");
+
+    // Missing Documents sheet
+    const missingData = [
+      ["Document / Form", "Reason Required", "Consequence / Impact"],
+      ...data.missing_documents.map((doc: any) => [
+        doc.document || doc.form_name || "",
+        doc.reason || doc.reason_required || "",
+        doc.consequence || doc.impact || doc.risk_of_absence || "",
+      ]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(missingData), "Missing Documents");
+
+    // Top Risks sheet
+    const risksData = [
+      ["Risk Category", "Risk Level", "Description"],
+      ...data.top_risks.map((r: any) => [
+        r.category || r.title || "",
+        (r.risk_level || "HIGH").toUpperCase(),
+        r.description || r.explanation || "",
+      ]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(risksData), "Top Risks");
+
+    const filename = `TaxRadar_Report_${data.client_name || "Client"}_${data.tax_year || ""}.xlsx`.replace(/\s+/g, "_");
+    XLSX.writeFile(wb, filename);
+    setShowDownloadMenu(false);
+  };
 
   if (!data) return null;
 
@@ -90,7 +173,25 @@ export default function Report() {
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <button onClick={() => navigator.clipboard.writeText(memo)} style={{ background: "rgba(255,255,255,0.08)", color: "#fff", padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", fontWeight: 500 }}>Copy Memo</button>
-            <button style={{ background: "#10B981", color: "#0A1628", padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 700 }}>Download Report</button>
+            <div ref={downloadRef} style={{ position: "relative" }}>
+              <button onClick={() => setShowDownloadMenu(p => !p)} style={{ background: "#10B981", color: "#0A1628", padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                Download Report <span style={{ fontSize: 10 }}>▼</span>
+              </button>
+              {showDownloadMenu && (
+                <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", background: "#112240", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden", minWidth: 160, zIndex: 100, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                  <button onClick={() => { setShowDownloadMenu(false); }} style={{ width: "100%", padding: "12px 16px", background: "transparent", color: "#fff", border: "none", cursor: "pointer", textAlign: "left", fontSize: 14, display: "flex", alignItems: "center", gap: 10 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                    <span style={{ fontSize: 16 }}>📄</span> PDF
+                  </button>
+                  <button onClick={downloadExcel} style={{ width: "100%", padding: "12px 16px", background: "transparent", color: "#fff", border: "none", cursor: "pointer", textAlign: "left", fontSize: 14, display: "flex", alignItems: "center", gap: 10 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                    <span style={{ fontSize: 16 }}>📊</span> Excel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
