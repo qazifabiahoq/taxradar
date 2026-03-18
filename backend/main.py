@@ -59,11 +59,31 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
                 wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
                 lines = []
                 for sheet in wb.worksheets:
-                    lines.append(f"[Sheet: {sheet.title}]")
+                    lines.append(f"\n[Sheet: {sheet.title}]")
                     for row in sheet.iter_rows(values_only=True):
-                        row_text = "\t".join("" if v is None else str(v) for v in row)
-                        if row_text.strip():
-                            lines.append(row_text)
+                        # Format each cell value readably; skip None
+                        formatted = []
+                        for v in row:
+                            if v is None:
+                                continue
+                            elif isinstance(v, float):
+                                # Preserve currency-like formatting with commas
+                                formatted.append(f"{v:,.2f}")
+                            elif isinstance(v, int):
+                                formatted.append(f"{v:,}")
+                            elif hasattr(v, "strftime"):  # datetime / date
+                                formatted.append(v.strftime("%Y-%m-%d"))
+                            else:
+                                s = str(v).strip()
+                                if s:
+                                    formatted.append(s)
+                        if not formatted:
+                            continue
+                        # 2-column rows → "Key: Value" (most tax form data is key-value)
+                        if len(formatted) == 2:
+                            lines.append(f"  {formatted[0]}: {formatted[1]}")
+                        else:
+                            lines.append("  " + " | ".join(formatted))
                 extracted_texts.append(f"[FILE: {upload.filename}]\n" + "\n".join(lines))
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (Excel extraction failed: {str(e)})")

@@ -71,6 +71,12 @@ Determine overall risk level:
 - Score 31 to 60: MEDIUM
 - Score 61 to 100: HIGH
 
+IMPORTANT — risk_distribution contains INTEGER COUNTS of individual issues (not percentages, not scores):
+- "high" = how many separate high-risk issues were identified (e.g., 3)
+- "medium" = how many separate medium-risk issues were identified (e.g., 5)
+- "low" = how many separate low-risk issues were identified (e.g., 2)
+These are raw item counts. Do NOT put the audit_risk_score or any percentage here.
+
 Write the executive summary in 3 to 4 sentences covering the biggest concerns found.
 
 Write the CPA memo in formal professional language that a senior tax manager would send to a client. Use plain text only — no markdown, no asterisks, no bold formatting, no bullet symbols like * or **. Use numbered lists (1. 2. 3.) and section headers in plain capitals. Include:
