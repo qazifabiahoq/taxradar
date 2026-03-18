@@ -182,8 +182,11 @@ export default function Report() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {data.deductions.map((d: any, i) => {
               const color = d.risk_level === "high" ? "#EF4444" : d.risk_level === "medium" ? "#F59E0B" : "#34D399";
+              const detail = d.notes || d.flag_reason || '';
+              const recommendation = d.recommendation || '';
+              const hasDetail = !!(detail || recommendation);
               return (
-                <div key={i} onClick={() => setExpandedRows(p => ({ ...p, [i]: !p[i] }))} style={{ background: "#112240", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", borderLeft: `4px solid ${color}`, cursor: "pointer" }}>
+                <div key={i} onClick={() => hasDetail && setExpandedRows(p => ({ ...p, [i]: !p[i] }))} style={{ background: "#112240", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", borderLeft: `4px solid ${color}`, cursor: hasDetail ? "pointer" : "default" }}>
                   <div style={{ padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontWeight: 600 }}>{d.category || (d as any).deduction_type || 'Unknown'}</div>
@@ -191,7 +194,12 @@ export default function Report() {
                     </div>
                     <span style={{ background: `${color}20`, color, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, textTransform: "uppercase" }}>{d.risk_level} Risk</span>
                   </div>
-                  {expandedRows[i] && <div style={{ padding: "0 24px 16px 24px", color: "#8892B0", fontSize: 13, borderTop: "1px solid rgba(255,255,255,0.05)" }}><p style={{ paddingTop: 12 }}>{d.notes}</p></div>}
+                  {expandedRows[i] && hasDetail && (
+                    <div style={{ padding: "0 24px 16px 24px", color: "#8892B0", fontSize: 13, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                      {detail && <p style={{ paddingTop: 12 }}>{detail}</p>}
+                      {recommendation && <p style={{ paddingTop: 8, color: "#10B981" }}>Recommendation: {recommendation}</p>}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -210,7 +218,11 @@ export default function Report() {
                   <div>
                     <h4 style={{ fontWeight: 700, marginBottom: 6 }}>{doc.document || doc.form_name || ''}</h4>
                     <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>{doc.reason || doc.reason_required || ''}</p>
-                    <span style={{ background: "hsla(0,84%,60%,0.1)", color: "#EF4444", border: "1px solid hsla(0,84%,60%,0.3)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase" }}>Impact: {doc.impact || ''}</span>
+                    {(doc.consequence || doc.impact || doc.risk_of_absence) && (
+                      <span style={{ background: "hsla(0,84%,60%,0.1)", color: "#EF4444", border: "1px solid hsla(0,84%,60%,0.3)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase" }}>
+                        Impact: {doc.consequence || doc.impact || doc.risk_of_absence}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
