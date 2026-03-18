@@ -140,11 +140,11 @@ export default function Report() {
             <span style={{ color: "#EF4444" }}>&#9888;</span> Top Audit Risks Identified
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
-            {data.top_risks.map((risk, i) => (
+            {data.top_risks.map((risk: any, i) => (
               <div key={i} style={{ background: "#112240", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.05)", borderTop: "4px solid #EF4444", position: "relative" }}>
                 <span style={{ position: "absolute", top: 16, right: 16, background: "hsla(0,84%,60%,0.15)", color: "#EF4444", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>HIGH RISK</span>
-                <h4 style={{ fontWeight: 700, marginBottom: 10, paddingRight: 80 }}>{risk.category}</h4>
-                <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.7 }}>{risk.description}</p>
+                <h4 style={{ fontWeight: 700, marginBottom: 10, paddingRight: 80 }}>{risk.category || risk.title || ''}</h4>
+                <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.7 }}>{risk.description || risk.explanation || ''}</p>
               </div>
             ))}
           </div>
@@ -161,10 +161,10 @@ export default function Report() {
               </tr>
             </thead>
             <tbody>
-              {data.income_sources.map((s, i) => (
+              {data.income_sources.map((s: any, i) => (
                 <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <td style={{ padding: "14px 24px", fontWeight: 500 }}>{s.source}</td>
-                  <td style={{ padding: "14px 24px" }}>${s.amount.toLocaleString()}</td>
+                  <td style={{ padding: "14px 24px", fontWeight: 500 }}>{s.source || s.type || 'Unknown'}</td>
+                  <td style={{ padding: "14px 24px" }}>${Number(s.amount ?? 0).toLocaleString()}</td>
                   <td style={{ padding: "14px 24px" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: s.status === "consistent" ? "hsla(158,64%,52%,0.1)" : "hsla(38,92%,50%,0.1)", color: s.status === "consistent" ? "#34D399" : "#F59E0B", border: `1px solid ${s.status === "consistent" ? "hsla(158,64%,52%,0.2)" : "hsla(38,92%,50%,0.2)"}` }}>
                       {s.status === "consistent" ? "Consistent" : "Flagged"}
@@ -180,14 +180,14 @@ export default function Report() {
         <div>
           <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16 }}>Deduction Analysis</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {data.deductions.map((d, i) => {
+            {data.deductions.map((d: any, i) => {
               const color = d.risk_level === "high" ? "#EF4444" : d.risk_level === "medium" ? "#F59E0B" : "#34D399";
               return (
                 <div key={i} onClick={() => setExpandedRows(p => ({ ...p, [i]: !p[i] }))} style={{ background: "#112240", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", borderLeft: `4px solid ${color}`, cursor: "pointer" }}>
                   <div style={{ padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{d.category}</div>
-                      <div style={{ fontSize: 13, color: "#8892B0", marginTop: 2 }}>${d.amount.toLocaleString()}</div>
+                      <div style={{ fontWeight: 600 }}>{d.category || (d as any).deduction_type || 'Unknown'}</div>
+                      <div style={{ fontSize: 13, color: "#8892B0", marginTop: 2 }}>${Number(d.amount ?? (d as any).amount_claimed ?? 0).toLocaleString()}</div>
                     </div>
                     <span style={{ background: `${color}20`, color, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, textTransform: "uppercase" }}>{d.risk_level} Risk</span>
                   </div>
@@ -202,15 +202,15 @@ export default function Report() {
           <div>
             <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16 }}>Missing Required Documentation</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 }}>
-              {data.missing_documents.map((doc, i) => (
+              {data.missing_documents.map((doc: any, i) => (
                 <div key={i} style={{ background: "#0A1628", borderRadius: 14, padding: 20, border: "1px solid hsla(0,84%,60%,0.3)", display: "flex", gap: 16 }}>
                   <div style={{ background: "hsla(0,84%,60%,0.1)", borderRadius: 10, padding: 8, flexShrink: 0, height: 40 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
                   </div>
                   <div>
-                    <h4 style={{ fontWeight: 700, marginBottom: 6 }}>{doc.document}</h4>
-                    <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>{doc.reason}</p>
-                    <span style={{ background: "hsla(0,84%,60%,0.1)", color: "#EF4444", border: "1px solid hsla(0,84%,60%,0.3)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase" }}>Impact: {doc.impact}</span>
+                    <h4 style={{ fontWeight: 700, marginBottom: 6 }}>{doc.document || doc.form_name || ''}</h4>
+                    <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>{doc.reason || doc.reason_required || ''}</p>
+                    <span style={{ background: "hsla(0,84%,60%,0.1)", color: "#EF4444", border: "1px solid hsla(0,84%,60%,0.3)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase" }}>Impact: {doc.impact || ''}</span>
                   </div>
                 </div>
               ))}
