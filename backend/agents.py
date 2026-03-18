@@ -14,7 +14,7 @@ if _api_key:
     os.environ["GOOGLE_API_KEY"] = _api_key
     os.environ["GEMINI_API_KEY"] = _api_key
 
-MODEL = 'gemini-2.5-flash-preview-04-17'
+MODEL = 'gemini-2.5-flash'
 
 _agents_cache: dict = {}
 
