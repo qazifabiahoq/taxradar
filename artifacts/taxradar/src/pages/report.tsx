@@ -157,15 +157,22 @@ export default function ReportPage() {
               <ShieldAlert className="w-6 h-6 text-destructive" /> Top Audit Risks Identified
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {data.top_risks.map((risk, i) => (
-                <Card key={i} className="p-5 bg-card border-white/5 border-t-4 border-t-destructive shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-3">
-                    <Badge variant="destructive" className="bg-destructive/20 text-destructive border-destructive/30">HIGH RISK</Badge>
-                  </div>
-                  <h4 className="text-white font-semibold mb-3 pr-20">{risk.category}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{risk.description}</p>
-                </Card>
-              ))}
+              {data.top_risks.map((risk, i) => {
+                // Backend may return title/explanation or category/description
+                const riskTitle = (risk as any).title || (risk as any).category || '';
+                const riskDesc = (risk as any).explanation || (risk as any).description || '';
+                const riskLevel = (risk as any).risk_level || 'high';
+                const badgeClass = riskLevel === 'medium' ? 'bg-warning/20 text-warning border-warning/30' : riskLevel === 'low' ? 'bg-success/20 text-success border-success/30' : 'bg-destructive/20 text-destructive border-destructive/30';
+                return (
+                  <Card key={i} className="p-5 bg-card border-white/5 border-t-4 border-t-destructive shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3">
+                      <Badge variant="destructive" className={badgeClass}>{riskLevel.toUpperCase()} RISK</Badge>
+                    </div>
+                    <h4 className="text-white font-semibold mb-3 pr-20">{riskTitle}</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{riskDesc}</p>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
@@ -186,24 +193,30 @@ export default function ReportPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {data.income_sources.map((income, i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-medium text-white">{income.source}</td>
-                    <td className="px-6 py-4 text-white">${income.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4">
-                      {income.status === 'consistent' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success border border-success/20">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Consistent
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning border border-warning/20">
-                          <AlertTriangle className="w-3.5 h-3.5" /> Flagged
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">{income.notes}</td>
-                  </tr>
-                ))}
+                {data.income_sources.map((income, i) => {
+                  const amount = Number((income as any).amount ?? 0);
+                  const source = (income as any).source || (income as any).type || 'Unknown';
+                  const status = (income as any).status || ((income as any).flag_reason ? 'flagged' : 'consistent');
+                  const notes = (income as any).notes || (income as any).flag_reason || (income as any).type || '';
+                  return (
+                    <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-4 font-medium text-white">{source}</td>
+                      <td className="px-6 py-4 text-white">${amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        {status === 'consistent' || status === 'verified' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success border border-success/20">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Consistent
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning border border-warning/20">
+                            <AlertTriangle className="w-3.5 h-3.5" /> Flagged
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{notes}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -214,13 +227,19 @@ export default function ReportPage() {
           <h3 className="text-xl font-bold text-white">Deduction Analysis</h3>
           <div className="space-y-3">
             {data.deductions.map((deduction, i) => {
-              const riskColor = 
-                deduction.risk_level === 'high' ? 'border-l-destructive' :
-                deduction.risk_level === 'medium' ? 'border-l-warning' : 'border-l-success';
+              // Backend may return deduction_type/amount_claimed or category/amount
+              const category = (deduction as any).category || (deduction as any).deduction_type || 'Unknown';
+              const amount = Number((deduction as any).amount ?? (deduction as any).amount_claimed ?? 0);
+              const riskLevel = (deduction as any).risk_level || 'low';
+              const notes = (deduction as any).notes || (deduction as any).flag_reason || (deduction as any).recommendation || '';
+
+              const riskColor =
+                riskLevel === 'high' ? 'border-l-destructive' :
+                riskLevel === 'medium' ? 'border-l-warning' : 'border-l-success';
               const badgeColor =
-                deduction.risk_level === 'high' ? 'bg-destructive/20 text-destructive' :
-                deduction.risk_level === 'medium' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success';
-              
+                riskLevel === 'high' ? 'bg-destructive/20 text-destructive' :
+                riskLevel === 'medium' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success';
+
               const isExpanded = expandedRows[i];
 
               return (
@@ -231,17 +250,17 @@ export default function ReportPage() {
                         {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-white">{deduction.category}</h4>
-                        <div className="text-sm text-muted-foreground">${deduction.amount.toLocaleString()}</div>
+                        <h4 className="font-semibold text-white">{category}</h4>
+                        <div className="text-sm text-muted-foreground">${amount.toLocaleString()}</div>
                       </div>
                     </div>
                     <Badge variant="outline" className={clsx("border-0 font-semibold uppercase tracking-wider text-xs", badgeColor)}>
-                      {deduction.risk_level} RISK
+                      {riskLevel} RISK
                     </Badge>
                   </div>
                   {isExpanded && (
                     <div className="px-6 pb-5 pt-1 ml-12 border-t border-white/5">
-                      <p className="text-sm text-muted-foreground">{deduction.notes}</p>
+                      <p className="text-sm text-muted-foreground">{notes}</p>
                     </div>
                   )}
                 </Card>
@@ -257,18 +276,24 @@ export default function ReportPage() {
               <FileX2 className="w-6 h-6 text-destructive" /> Missing Required Documentation
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.missing_documents.map((doc, i) => (
-                <Card key={i} className="p-5 bg-background border border-destructive/30 flex items-start gap-4">
-                  <div className="bg-destructive/10 p-2 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white mb-1">{doc.document}</h4>
-                    <p className="text-sm text-muted-foreground mb-3">{doc.reason}</p>
-                    <Badge variant="outline" className="border-destructive/30 text-destructive text-xs uppercase">Impact: {doc.impact}</Badge>
-                  </div>
-                </Card>
-              ))}
+              {data.missing_documents.map((doc, i) => {
+                // Backend may return form_name/reason_required/risk_of_absence or document/reason/impact
+                const docName = (doc as any).document || (doc as any).form_name || 'Unknown';
+                const reason = (doc as any).reason || (doc as any).reason_required || (doc as any).consequence || '';
+                const impact = (doc as any).impact || (doc as any).risk_of_absence || 'unknown';
+                return (
+                  <Card key={i} className="p-5 bg-background border border-destructive/30 flex items-start gap-4">
+                    <div className="bg-destructive/10 p-2 rounded-lg">
+                      <AlertTriangle className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-1">{docName}</h4>
+                      <p className="text-sm text-muted-foreground mb-3">{reason}</p>
+                      <Badge variant="outline" className="border-destructive/30 text-destructive text-xs uppercase">Impact: {impact}</Badge>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
