@@ -21,10 +21,11 @@ MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024       # 50 MB per file
 MAX_COMBINED_TEXT_CHARS = 500_000            # ~500 KB of combined extracted text
 
 
+@app.get("/")
 @app.get("/health")
 @app.get("/healthz")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "TaxRadar API"}
 
 
 @app.post("/api/analyze")
