@@ -44,7 +44,7 @@ export default function Navbar() {
         </Link>
 
         <nav style={{ display: "flex", gap: 32, fontSize: 14, fontWeight: 500 }}>
-          <Link href="/" style={{ color: "#8892B0", textDecoration: "none" }}>Features</Link>
+          <Link href="/#features" style={{ color: "#8892B0", textDecoration: "none" }}>Features</Link>
           <Link href="/pricing" style={{ color: "#8892B0", textDecoration: "none" }}>Pricing</Link>
           <Link href="/upload" style={{ color: "#8892B0", textDecoration: "none" }}>How It Works</Link>
         </nav>

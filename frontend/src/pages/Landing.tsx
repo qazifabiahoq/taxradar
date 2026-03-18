@@ -44,26 +44,6 @@ export default function Landing() {
       <section style={{ padding: "96px 0 128px", textAlign: "center", position: "relative" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 2rem" }}>
           <motion.div initial="initial" animate="animate" variants={stagger}>
-            <motion.div
-              variants={fadeIn}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 16px",
-                borderRadius: 999,
-                background: "hsla(160,84%,39%,0.1)",
-                border: "1px solid hsla(160,84%,39%,0.2)",
-                color: "#10B981",
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 32,
-              }}
-            >
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
-              Tax Season 2024 Readiness Updated
-            </motion.div>
-
             <motion.h1
               variants={fadeIn}
               style={{ fontSize: "clamp(2.5rem,6vw,5rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: 24 }}
@@ -106,7 +86,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section style={{ padding: "96px 0" }}>
+      <section id="features" style={{ padding: "96px 0" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>Enterprise-Grade Analysis</h2>
