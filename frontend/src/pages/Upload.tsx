@@ -43,21 +43,28 @@ export default function Upload() {
     setIsAnalyzing(true);
     setCurrentStep(0);
 
-    for (let i = 0; i < LOADING_STEPS.length; i++) {
-      setCurrentStep(i);
-      await new Promise(r => setTimeout(r, 800));
-    }
+    const formData = new FormData();
+    files.forEach(f => formData.append("files", f));
 
-    try {
-      const formData = new FormData();
-      files.forEach(f => formData.append("files", f));
-      const response = await axios.post(`${API_URL}/api/analyze`, formData);
-      sessionStorage.setItem("reportData", JSON.stringify(response.data));
-    } catch {
-      sessionStorage.removeItem("reportData");
-    } finally {
-      setLocation("/report");
+    // Run animation and API call in parallel
+    const [, apiResult] = await Promise.allSettled([
+      (async () => {
+        for (let i = 0; i < LOADING_STEPS.length; i++) {
+          setCurrentStep(i);
+          await new Promise(r => setTimeout(r, 800));
+        }
+      })(),
+      API_URL
+        ? axios.post(`${API_URL}/api/analyze`, formData)
+        : Promise.reject(new Error("No API URL")),
+    ]);
+
+    if (apiResult.status === "fulfilled" && apiResult.value?.data) {
+      sessionStorage.setItem("reportData", JSON.stringify(apiResult.value.data));
     }
+    // If API failed, leave whatever was in sessionStorage (or nothing — report handles it)
+
+    setLocation("/report");
   };
 
   return (
