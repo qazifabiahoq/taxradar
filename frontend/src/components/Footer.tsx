@@ -33,21 +33,17 @@ export default function Footer() {
           <div>
             <h4 style={{ color: "#fff", fontWeight: 600, marginBottom: 16, fontSize: 14 }}>Product</h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Features", "Pricing", "Security"].map((item) => (
-                <li key={item}>
-                  <Link href="/upload" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>{item}</Link>
-                </li>
-              ))}
+              <li><Link href="/#features" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>Features</Link></li>
+              <li><Link href="/pricing" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>Pricing</Link></li>
+              <li><Link href="/security" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>Security</Link></li>
             </ul>
           </div>
           <div>
             <h4 style={{ color: "#fff", fontWeight: 600, marginBottom: 16, fontSize: 14 }}>Company</h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-              {["About", "Contact", "Privacy Policy"].map((item) => (
-                <li key={item}>
-                  <Link href="/upload" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>{item}</Link>
-                </li>
-              ))}
+              <li><Link href="/about" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>About</Link></li>
+              <li><Link href="/contact" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>Contact</Link></li>
+              <li><Link href="/privacy" style={{ color: "#8892B0", fontSize: 14, textDecoration: "none" }}>Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -64,8 +60,8 @@ export default function Footer() {
         >
           <p>© {new Date().getFullYear()} TaxRadar Inc. All rights reserved.</p>
           <div style={{ display: "flex", gap: 24 }}>
-            <Link href="/upload" style={{ color: "#8892B0", textDecoration: "none" }}>Terms of Service</Link>
-            <Link href="/upload" style={{ color: "#8892B0", textDecoration: "none" }}>Privacy</Link>
+            <Link href="/terms" style={{ color: "#8892B0", textDecoration: "none" }}>Terms of Service</Link>
+            <Link href="/privacy" style={{ color: "#8892B0", textDecoration: "none" }}>Privacy</Link>
           </div>
         </div>
       </div>
