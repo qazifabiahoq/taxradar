@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const LOADING_STEPS = [
   "Extracting document text...",
@@ -21,6 +23,7 @@ export default function Upload() {
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
@@ -29,42 +32,69 @@ export default function Upload() {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files?.length) setFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]);
+    if (e.dataTransfer.files?.length) {
+      const dropped = Array.from(e.dataTransfer.files);
+      const oversized = dropped.filter(f => f.size > MAX_FILE_SIZE_BYTES);
+      if (oversized.length) {
+        setError(`${oversized.map(f => f.name).join(", ")} exceed${oversized.length === 1 ? "s" : ""} the ${MAX_FILE_SIZE_MB} MB limit.`);
+        return;
+      }
+      setError(null);
+      setFiles(prev => [...prev, ...dropped]);
+    }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    if (e.target.files?.length) {
+      const selected = Array.from(e.target.files);
+      const oversized = selected.filter(f => f.size > MAX_FILE_SIZE_BYTES);
+      if (oversized.length) {
+        setError(`${oversized.map(f => f.name).join(", ")} exceed${oversized.length === 1 ? "s" : ""} the ${MAX_FILE_SIZE_MB} MB limit.`);
+        return;
+      }
+      setError(null);
+      setFiles(prev => [...prev, ...selected]);
+    }
   };
 
   const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
 
   const startAnalysis = async () => {
     if (!files.length) return;
+    setError(null);
     setIsAnalyzing(true);
     setCurrentStep(0);
 
     const formData = new FormData();
     files.forEach(f => formData.append("files", f));
 
-    // Run animation and API call in parallel
+    // Run animation and API call in parallel; wait for both
     const [, apiResult] = await Promise.allSettled([
       (async () => {
         for (let i = 0; i < LOADING_STEPS.length; i++) {
           setCurrentStep(i);
           await new Promise(r => setTimeout(r, 800));
         }
+        setCurrentStep(LOADING_STEPS.length); // reach 100%
       })(),
       API_URL
         ? axios.post(`${API_URL}/api/analyze`, formData)
-        : Promise.reject(new Error("No API URL")),
+        : Promise.reject(new Error("API URL not configured. Set VITE_API_URL.")),
     ]);
 
     if (apiResult.status === "fulfilled" && apiResult.value?.data) {
       sessionStorage.setItem("reportData", JSON.stringify(apiResult.value.data));
+      setLocation("/report");
+    } else {
+      // Extract error message from axios error or generic
+      const axiosErr = apiResult.status === "rejected" ? (apiResult as PromiseRejectedResult).reason : null;
+      const message =
+        axiosErr?.response?.data?.detail ||
+        axiosErr?.message ||
+        "Analysis failed. Please check your files and try again.";
+      setIsAnalyzing(false);
+      setError(message);
     }
-    // If API failed, leave whatever was in sessionStorage (or nothing — report handles it)
-
-    setLocation("/report");
   };
 
   return (
@@ -76,6 +106,13 @@ export default function Upload() {
           <p style={{ color: "#8892B0" }}>Securely upload client documents for instant AI analysis and risk scoring.</p>
         </div>
 
+        {error && (
+          <div style={{ background: "hsla(0,84%,60%,0.1)", border: "1px solid hsla(0,84%,60%,0.3)", borderRadius: 12, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <svg style={{ flexShrink: 0, marginTop: 2 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+            <span style={{ color: "#EF4444", fontSize: 14, lineHeight: 1.6 }}>{error}</span>
+          </div>
+        )}
+
         {isAnalyzing ? (
           <div style={{ background: "#112240", borderRadius: 20, padding: 64, textAlign: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
             <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 32px" }}>
@@ -84,7 +121,9 @@ export default function Upload() {
                 <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="#10B981" />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: "#10B981", fontWeight: 700, fontSize: 18 }}>{Math.round((currentStep / LOADING_STEPS.length) * 100)}%</span>
+                <span style={{ color: "#10B981", fontWeight: 700, fontSize: 18 }}>
+                  {Math.min(100, Math.round((currentStep / LOADING_STEPS.length) * 100))}%
+                </span>
               </div>
             </div>
             <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 32 }}>Analyzing Documents</h3>
@@ -126,7 +165,7 @@ export default function Upload() {
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Drag and drop documents here</h3>
-              <p style={{ color: "#8892B0", marginBottom: 24 }}>Accepts PDF, Excel, CSV, JPG, PNG up to 50MB</p>
+              <p style={{ color: "#8892B0", marginBottom: 24 }}>Accepts PDF, Excel, CSV, JPG, PNG up to {MAX_FILE_SIZE_MB}MB</p>
               <button style={{ background: "rgba(255,255,255,0.08)", color: "#fff", padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 500 }}>Browse Files</button>
               <p style={{ color: "#8892B0", fontSize: 13, marginTop: 16 }}>You can upload multiple files at once.</p>
             </div>
