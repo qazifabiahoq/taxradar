@@ -10,7 +10,7 @@ interface Deduction { category: string; amount: number; risk_level: "high" | "me
 interface MissingDocument { document: string; reason: string; impact: "critical" | "important" | "minor"; }
 interface Report {
   client_name?: string; tax_year?: string; analysis_date?: string;
-  executive_summary: string; audit_risk_score: number;
+  executive_summary: string; audit_risk_score: number; risk_level?: string;
   risk_distribution: { high: number; medium: number; low: number };
   income_sources: IncomeSource[]; top_risks: RiskItem[]; deductions: Deduction[];
   missing_documents: MissingDocument[]; cpa_memo: string;
@@ -84,7 +84,7 @@ export default function Report() {
       ["Tax Year", data.tax_year || ""],
       ["Analysis Date", data.analysis_date || ""],
       ["Audit Risk Score", data.audit_risk_score],
-      ["Risk Level", data.audit_risk_score >= 70 ? "HIGH" : data.audit_risk_score >= 40 ? "MEDIUM" : "LOW"],
+      ["Risk Level", data.audit_risk_score >= 61 ? "HIGH" : data.audit_risk_score >= 31 ? "MEDIUM" : "LOW"],
       [],
       ["Risk Distribution"],
       ["High Risk Items", data.risk_distribution.high],
@@ -154,8 +154,10 @@ export default function Report() {
   ].filter(d => d.value > 0);
 
   const riskScore = data.audit_risk_score;
-  const scoreColor = riskScore >= 70 ? "#EF4444" : riskScore >= 40 ? "#F59E0B" : "#34D399";
-  const statusLabel = riskScore >= 70 ? "High Risk" : riskScore >= 40 ? "Review Required" : "Ready to File";
+  // Use risk_level from API if present; otherwise derive from score using backend thresholds (31/61)
+  const riskLevel = data.risk_level || (riskScore >= 61 ? "high" : riskScore >= 31 ? "medium" : "low");
+  const scoreColor = riskLevel === "high" ? "#EF4444" : riskLevel === "medium" ? "#F59E0B" : "#34D399";
+  const statusLabel = riskLevel === "high" ? "High Risk" : riskLevel === "medium" ? "Review Required" : "Ready to File";
 
   return (
     <div style={{ minHeight: "100vh", background: "#0A1628", color: "#fff" }}>
@@ -241,13 +243,18 @@ export default function Report() {
             <span style={{ color: "#EF4444" }}>&#9888;</span> Top Audit Risks Identified
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
-            {data.top_risks.map((risk: any, i) => (
-              <div key={i} style={{ background: "#112240", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.05)", borderTop: "4px solid #EF4444", position: "relative" }}>
-                <span style={{ position: "absolute", top: 16, right: 16, background: "hsla(0,84%,60%,0.15)", color: "#EF4444", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>HIGH RISK</span>
+            {data.top_risks.map((risk: any, i) => {
+              const rl = (risk.risk_level || "high").toLowerCase();
+              const rc = rl === "high" ? "#EF4444" : rl === "medium" ? "#F59E0B" : "#34D399";
+              const rcBg = rl === "high" ? "hsla(0,84%,60%,0.15)" : rl === "medium" ? "hsla(38,92%,50%,0.15)" : "hsla(158,64%,52%,0.15)";
+              return (
+              <div key={i} style={{ background: "#112240", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.05)", borderTop: `4px solid ${rc}`, position: "relative" }}>
+                <span style={{ position: "absolute", top: 16, right: 16, background: rcBg, color: rc, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>{rl.toUpperCase()} RISK</span>
                 <h4 style={{ fontWeight: 700, marginBottom: 10, paddingRight: 80 }}>{risk.category || risk.title || ''}</h4>
                 <p style={{ color: "#8892B0", fontSize: 13, lineHeight: 1.7 }}>{risk.description || risk.explanation || ''}</p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

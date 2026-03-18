@@ -17,18 +17,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024       # 50 MB per file
+MAX_COMBINED_TEXT_CHARS = 500_000            # ~500 KB of combined extracted text
+
+
 @app.get("/health")
+@app.get("/healthz")
 def health_check():
     return {"status": "ok"}
+
 
 @app.post("/api/analyze")
 async def analyze_documents(files: List[UploadFile] = File(...)):
     if not files:
         raise HTTPException(status_code=400, detail="At least one file must be provided.")
+
     extracted_texts = []
+
     for upload in files:
         content = await upload.read()
+
+        # Enforce 50 MB per-file limit
+        if len(content) > MAX_FILE_SIZE_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File '{upload.filename}' exceeds the 50 MB size limit.",
+            )
+
         fname = upload.filename.lower()
+
         if fname.endswith(".pdf"):
             try:
                 reader = pypdf.PdfReader(io.BytesIO(content))
@@ -36,6 +53,7 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
                 extracted_texts.append(f"[FILE: {upload.filename}]\n{text}")
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (PDF extraction failed: {str(e)})")
+
         elif fname.endswith(".xlsx") or fname.endswith(".xls"):
             try:
                 wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
@@ -49,6 +67,7 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
                 extracted_texts.append(f"[FILE: {upload.filename}]\n" + "\n".join(lines))
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (Excel extraction failed: {str(e)})")
+
         elif fname.endswith(".csv"):
             try:
                 text = content.decode("utf-8", errors="replace")
@@ -57,8 +76,23 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
                 extracted_texts.append(f"[FILE: {upload.filename}]\n" + "\n".join(lines))
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (CSV extraction failed: {str(e)})")
+
         else:
             extracted_texts.append(f"[FILE: {upload.filename}] (unsupported file type, skipped)")
+
     combined_text = "\n\n---\n\n".join(extracted_texts)
+
+    # Guard against extremely large inputs (protects Gemini token limits)
+    if len(combined_text) > MAX_COMBINED_TEXT_CHARS:
+        combined_text = combined_text[:MAX_COMBINED_TEXT_CHARS]
+
     report = await run_analysis(combined_text)
+
+    # Return 500 if the pipeline itself failed (error sentinel in response)
+    if report.get("risk_level") == "unknown":
+        raise HTTPException(
+            status_code=500,
+            detail=report.get("executive_summary", "Analysis pipeline failed. Please try again."),
+        )
+
     return report
