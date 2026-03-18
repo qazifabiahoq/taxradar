@@ -121,12 +121,12 @@ export default function Upload() {
                 transition: "all 0.2s",
               }}
             >
-              <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} />
+              <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.csv" style={{ display: "none" }} />
               <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#0A1628", border: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Drag and drop documents here</h3>
-              <p style={{ color: "#8892B0", marginBottom: 24 }}>Accepts PDF, JPG, PNG up to 50MB</p>
+              <p style={{ color: "#8892B0", marginBottom: 24 }}>Accepts PDF, Excel, CSV, JPG, PNG up to 50MB</p>
               <button style={{ background: "rgba(255,255,255,0.08)", color: "#fff", padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 500 }}>Browse Files</button>
               <p style={{ color: "#8892B0", fontSize: 13, marginTop: 16 }}>You can upload multiple files at once.</p>
             </div>
