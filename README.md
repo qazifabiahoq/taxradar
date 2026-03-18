@@ -2,7 +2,7 @@
 
 AI-powered multi-agent tax readiness platform for CPAs and accounting professionals.
 
-Live Demo: [your-demo-url-here]
+Live Demo: https://taxradar-steel.vercel.app/
 
 ## The Problem
 
