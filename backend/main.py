@@ -56,34 +56,46 @@ async def analyze_documents(files: List[UploadFile] = File(...)):
 
         elif fname.endswith(".xlsx") or fname.endswith(".xls"):
             try:
-                wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
-                lines = []
-                for sheet in wb.worksheets:
-                    lines.append(f"\n[Sheet: {sheet.title}]")
-                    for row in sheet.iter_rows(values_only=True):
-                        # Format each cell value readably; skip None
-                        formatted = []
-                        for v in row:
-                            if v is None:
+                def _parse_xlsx(raw: bytes, data_only: bool) -> tuple[list[str], int]:
+                    """Extract all sheets; return (lines, value_count)."""
+                    wb = openpyxl.load_workbook(io.BytesIO(raw), data_only=data_only)
+                    lines: list[str] = []
+                    value_count = 0
+                    for sheet in wb.worksheets:
+                        lines.append(f"\n[Sheet: {sheet.title}]")
+                        for row in sheet.iter_rows(values_only=True):
+                            formatted: list[str] = []
+                            for v in row:
+                                if v is None:
+                                    continue
+                                elif isinstance(v, bool):
+                                    formatted.append(str(v))
+                                elif isinstance(v, float):
+                                    formatted.append(f"{v:,.2f}")
+                                elif isinstance(v, int):
+                                    formatted.append(f"{v:,}")
+                                elif hasattr(v, "strftime"):
+                                    formatted.append(v.strftime("%Y-%m-%d"))
+                                else:
+                                    s = str(v).strip()
+                                    if s:
+                                        formatted.append(s)
+                            if not formatted:
                                 continue
-                            elif isinstance(v, float):
-                                # Preserve currency-like formatting with commas
-                                formatted.append(f"{v:,.2f}")
-                            elif isinstance(v, int):
-                                formatted.append(f"{v:,}")
-                            elif hasattr(v, "strftime"):  # datetime / date
-                                formatted.append(v.strftime("%Y-%m-%d"))
+                            value_count += len(formatted)
+                            if len(formatted) == 2:
+                                lines.append(f"  {formatted[0]}: {formatted[1]}")
                             else:
-                                s = str(v).strip()
-                                if s:
-                                    formatted.append(s)
-                        if not formatted:
-                            continue
-                        # 2-column rows → "Key: Value" (most tax form data is key-value)
-                        if len(formatted) == 2:
-                            lines.append(f"  {formatted[0]}: {formatted[1]}")
-                        else:
-                            lines.append("  " + " | ".join(formatted))
+                                lines.append("  " + " | ".join(formatted))
+                    return lines, value_count
+
+                # Try cached formula results first; fall back if cells are mostly None
+                lines, val_count = _parse_xlsx(content, data_only=True)
+                if val_count < 10:
+                    # data_only=True returned almost nothing — likely uncached formulas
+                    # Retry without it (formula cells return formula text instead of None)
+                    lines, _ = _parse_xlsx(content, data_only=False)
+
                 extracted_texts.append(f"[FILE: {upload.filename}]\n" + "\n".join(lines))
             except Exception as e:
                 extracted_texts.append(f"[FILE: {upload.filename}] (Excel extraction failed: {str(e)})")
