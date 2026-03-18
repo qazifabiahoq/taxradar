@@ -179,7 +179,7 @@ export default function Report() {
               </button>
               {showDownloadMenu && (
                 <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", background: "#112240", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden", minWidth: 160, zIndex: 100, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-                  <button onClick={() => { setShowDownloadMenu(false); }} style={{ width: "100%", padding: "12px 16px", background: "transparent", color: "#fff", border: "none", cursor: "pointer", textAlign: "left", fontSize: 14, display: "flex", alignItems: "center", gap: 10 }}
+                  <button onClick={() => { setShowDownloadMenu(false); window.print(); }} style={{ width: "100%", padding: "12px 16px", background: "transparent", color: "#fff", border: "none", cursor: "pointer", textAlign: "left", fontSize: 14, display: "flex", alignItems: "center", gap: 10 }}
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                     <span style={{ fontSize: 16 }}>📄</span> PDF
