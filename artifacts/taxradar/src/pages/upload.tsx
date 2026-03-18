@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { clsx } from "clsx";
 import { mockReportData } from "@/lib/mock-data";
+import axios from "axios";
 
 const LOADING_STEPS = [
   "Extracting document text...",
@@ -56,33 +57,37 @@ export default function UploadPage() {
 
   const startAnalysis = async () => {
     if (files.length === 0) return;
-    
+
     setIsAnalyzing(true);
     setCurrentStep(0);
 
-    // Simulate analysis steps
-    for (let i = 0; i < LOADING_STEPS.length; i++) {
-      setCurrentStep(i);
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
+    const formData = new FormData();
+    files.forEach(f => formData.append("files", f));
 
-    // Attempting an API call, but we fallback to mock data since the backend logic might not be fully functional.
-    try {
-      // Create form data just like a real implementation
-      const formData = new FormData();
-      files.forEach(f => formData.append("files", f));
-      
-      // We simulate API returning data. In a real environment, we'd use axios or the generated hook:
-      // const response = await axios.post("/api/analyze", formData);
-      // sessionStorage.setItem("reportData", JSON.stringify(response.data));
-      
-      sessionStorage.setItem("reportData", JSON.stringify(mockReportData));
-    } catch (err) {
-      // Fallback
-      sessionStorage.setItem("reportData", JSON.stringify(mockReportData));
-    } finally {
-      setLocation("/report");
-    }
+    const apiBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+    // Run animation and API call in parallel
+    const [, apiResult] = await Promise.allSettled([
+      // Animation: step through each loading label
+      (async () => {
+        for (let i = 0; i < LOADING_STEPS.length; i++) {
+          setCurrentStep(i);
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      })(),
+      // Real API call (only if VITE_API_URL is set)
+      apiBase
+        ? axios.post(`${apiBase}/api/analyze`, formData)
+        : Promise.reject(new Error("No API URL configured")),
+    ]);
+
+    const reportData =
+      apiResult.status === "fulfilled" && apiResult.value?.data
+        ? apiResult.value.data
+        : mockReportData;
+
+    sessionStorage.setItem("reportData", JSON.stringify(reportData));
+    setLocation("/report");
   };
 
   return (
