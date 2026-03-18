@@ -7,14 +7,12 @@ from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
-import google.genai as genai
 
-# Resolve API key — support both variable names
+# Resolve API key — support both variable names, ensure both are set
 _api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
 if _api_key:
     os.environ["GOOGLE_API_KEY"] = _api_key
     os.environ["GEMINI_API_KEY"] = _api_key
-    genai.configure(api_key=_api_key)
 
 MODEL = 'gemini-2.0-flash'
 
